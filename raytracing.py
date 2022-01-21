@@ -39,7 +39,7 @@ color_light1 = np.array([0., 1., 0.]) # green light
 L2 = np.array([-15., 7., -10.])
 color_light2 = np.array([1., 0., 0.])  # red light
 L3 = np.array([1., 10., -3.])
-color_light3 = np.array([1., 2., 3.])  # blue light
+color_light3 = np.array([0., 0., 1.])  # blue light
 
 lights = np.array([L1,L2,L3])
 colors = np.array([color_light1, color_light2, color_light3])
@@ -83,11 +83,56 @@ def intersect_sphere(O, D, S, R):
     return np.inf
 
 
+def intersect_triangle(O, D, P, N):
+
+    p_intsc = intersect_plane(0,D,P[0],N);
+    if (p_intsc == np.inf):
+        return p_intsc
+
+    #Vértices del triángulo
+    A = P[0]
+    B = P[1]
+    C = P[2]
+
+    wO = O - A
+
+    a = -np.dot(N,wO)
+    b = np.dot(N,D)
+    r = a / b
+    if (r < 1e-6):
+        return np.inf
+
+    I = O + r*D
+
+    #Vectores del tríangulo
+    u = B - A
+    v = C - A
+    w = I - A
+
+    #Cálculo del producto de puntos
+    dot_uu = np.dot(u,u)
+    dot_uv = np.dot(u,v)
+    dot_vv = np.dot(v,v)
+    dot_wu = np.dot(w,u)
+    dot_wv = np.dot(w,v)
+
+    D = dot_uv * dot_uv - dot_uu * dot_vv
+    U = (dot_uv * dot_wv - dot_vv * dot_wu) / D
+    V = (dot_uv * dot_wu - dot_uu * dot_wv) / D
+
+    if (U >= 0.) and (V >= 0.) and (U + V < 1.):
+        return 1.
+    else:
+        return np.inf
+
+
 def intersect(O, D, obj):
     if obj['type'] == 'plane':
         return intersect_plane(O, D, obj['position'], obj['normal'])
     elif obj['type'] == 'sphere':
         return intersect_sphere(O, D, obj['position'], obj['radius'])
+    elif obj['type'] == 'triangle':
+        return intersect_triangle(O, D, obj['position'], obj['normal'])
 
 
 def get_normal(obj, M):
@@ -95,6 +140,8 @@ def get_normal(obj, M):
     if obj['type'] == 'sphere':
         N = normalize(M - obj['position'])
     elif obj['type'] == 'plane':
+        N = obj['normal']
+    elif obj['type'] == 'triangle':
         N = obj['normal']
     return N
 
@@ -155,13 +202,24 @@ def add_plane(position, normal):
                 diffuse_c=.75, specular_c=.5, reflection=.25)
 
 
+def add_triangle(position, color):
+
+    u = np.subtract(position[1], position[0])
+    v = np.subtract(position[2], position[1])
+    normal = (np.cross(u, v))
+
+    return dict(type='triangle', position=position,
+        color=np.array(color), reflection=.5, normal=normal)
+
+
 # List of objects.
 color_plane0 = 1. * np.ones(3)
 color_plane1 = 0. * np.ones(3)
 
-scene = [add_sphere([.75, .1, 1.], .6, [0., 0., 1.]),
-         add_sphere([-.75, .1, 2.25], .6, [.5, .223, .5]),
-         add_sphere([-2.75, .1, 3.5], .6, [1., .572, .184]),
+triangle1_pos = np.array([[-1.,-0.5,0.5],[-0.5,0.5,0.5],[0.,-0.5,0.5]])
+
+scene = [add_triangle(triangle1_pos,[1.,0.,0.]),
+         add_sphere([.75, .1, 1.], .6, [0., 0., 0.]),
          add_plane([0., -.5, 0.], [0., 1., 0.]),
          ]
 
