@@ -44,6 +44,9 @@ color_light3 = np.array([0., 0., 1.])  # blue light
 lights = np.array([L1,L2,L3])
 colors = np.array([color_light1, color_light2, color_light3])
 
+#Número vertices para el triangle strip, para dibujar un triangulo num_vert debe ser >= 3
+num_vert = 9
+
 
 def normalize(x):
     x /= np.linalg.norm(x)
@@ -95,7 +98,6 @@ def intersect_triangle(O, D, P, N):
     C = P[2]
 
     wO = O - A
-
     a = -np.dot(N,wO)
     b = np.dot(N,D)
     r = a / b
@@ -212,17 +214,47 @@ def add_triangle(position, color):
         color=np.array(color), reflection=.5, normal=normal)
 
 
+def add_triangle_strip (vertex, color):
+
+    if vertex < 3: return []
+
+    starting = np.array([[-1.25,.75,0.5],[-1.,1.,0.5],[-.75,.75,0.5]])
+
+    strip = [add_triangle(starting, color)]
+    distance = starting[1, 0] - starting[0, 0]
+
+    for i in range(3, vertex):
+        i = i + 1
+        x = starting[2,0] + distance
+        y = 0.75
+        if i % 2 == 0 : y = 1.
+        z = 0.5
+        vertex_pos = [x,y,z]
+
+        if i % 2 == 0:
+            triangle = add_triangle([starting[1], vertex_pos, starting[2]], [0.,0.,1.])
+        else:
+            triangle = add_triangle([starting[1], starting[2], vertex_pos], color)
+
+        starting = np.array([starting[1], starting[2], vertex_pos])
+        strip.append(triangle)
+
+    return strip
+
+
 # List of objects.
 color_plane0 = 1. * np.ones(3)
 color_plane1 = 0. * np.ones(3)
 
 triangle1_pos = np.array([[-1.,-0.5,0.5],[-0.5,0.5,0.5],[0.,-0.5,0.5]])
 
+strip = add_triangle_strip(num_vert,[0.,1.,0.])
+
 scene = [add_triangle(triangle1_pos,[1.,0.,0.]),
          add_sphere([.75, .1, 1.], .6, [0., 0., 0.]),
          add_plane([0., -.5, 0.], [0., 1., 0.]),
          ]
-
+scene = strip + scene
 
 # Default light and material parameters.
 ambient = .05
