@@ -214,6 +214,16 @@ def add_triangle(position, color):
         color=np.array(color), reflection=.5, normal=normal)
 
 
+def calc_vertex_pos(i, distance, start):
+
+    x = start + distance
+    y = 0.75
+    if i % 2 == 0 : y = 1.
+    z = 0.5
+
+    return [x,y,z]
+
+
 def add_triangle_strip (vertex, color):
 
     if vertex < 3: return []
@@ -225,11 +235,8 @@ def add_triangle_strip (vertex, color):
 
     for i in range(3, vertex):
         i = i + 1
-        x = starting[2,0] + distance
-        y = 0.75
-        if i % 2 == 0 : y = 1.
-        z = 0.5
-        vertex_pos = [x,y,z]
+
+        vertex_pos = calc_vertex_pos(i, distance, starting[2,0])
 
         if i % 2 == 0:
             triangle = add_triangle([starting[1], vertex_pos, starting[2]], [0.,0.,1.])
